@@ -4,21 +4,18 @@ from fcntl import ioctl
 from select import select
 import getopt, struct
 
-TUNSETIFF = 0x400454ca
-IFF_TUN   = 0x0001
+from pytun import TunTapDevice, IFF_TUN, IFF_NO_PI
 
-TUNMODE = IFF_TUN
+tun0 = TunTapDevice(name='tun0', flags=IFF_TUN) #+ IFF_NO_PI)
+#'127.0.0.1'
+tun0.addr = '192.168.1.2'
+tun0.dstaddr = '192.168.1.1'
+tun0.netmask = '255.255.255.0'
+tun0.mtu = 1500
 
-s = socket(AF_INET, SOCK_DGRAM)
+try:
+	tun0.up()
 
-f = os.open("/dev/net/tun", os.O_RDWR)
-ifs = ioctl(f, TUNSETIFF, struct.pack("16sH", "tun%d", TUNMODE))
-ifname = ifs[:16].strip("\x00")
-
-print "Allocated interface %s. Configure it and use it" % ifname
-
-os.write(f, "Hi! I'm UDP-package")
-
-s.sendto(os.read(f,1500),("192.168.1.1",9090))
-
-print "im here"
+	tun0.write("Hi! I'm UDP-package!")
+finally:
+	tun0.close()
