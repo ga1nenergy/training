@@ -1,32 +1,39 @@
-import os, sys
-import time
-from socket import *
-from fcntl import ioctl
+#!/usr/bin/python
+from pytun import TunTapDevice
 from select import select
-import getopt, struct
-import subprocess
+import time
 
-TUNSETIFF = 0x400454ca
-IFF_TUN   = 0x0001
+tun1 = TunTapDevice()
+tun2 = TunTapDevice()
 
-TUNMODE = IFF_TUN
+print "Name %s" % tun1.name
+tun1.addr = '10.8.0.1'
+tun1.dstaddr = '10.8.0.2'
+tun1.netmask = '255.255.255.0'
+tun1.mtu = 1500
+tun1.up()
 
-#s = socket(AF_INET, SOCK_DGRAM)
+print "Name %s" % tun2.name
+tun2.addr = '10.8.0.2'
+tun2.dstaddr = '10.8.0.1'
+tun2.netmask = '255.255.255.0'
+tun2.mtu = 1500
+tun2.up()
 
-f = os.open("/dev/net/tun", os.O_RDWR)
-ifs = ioctl(f, TUNSETIFF, struct.pack("16sH", "tun%d", TUNMODE))
-ifname = ifs[:16].strip("\x00")
+while True:
+    r = select([tun1, tun2], [], [])[0][0]
+    try:
+        buf = r.read(r.mtu)
+        if r == tun1:
+            read = tun1.name
+            tun2.write("Hi tun1!")
+        else:
+            read = tun2.name
+            tun1.write("Hi tun2!")
+        print "Read from %s: %s" % (read, buf.encode('hex'))
+		#time.sleep(5)
 
-subprocess.check_call('ifconfig tun0 192.168.1.2 pointopoint 192.168.1.1 up',
-        shell=True)
-
-print "Allocated interface %s. Configure it and use it" % ifname
-
-
-os.write(f, "Hi! I'm UDP-package")
-
-time.sleep(10000)
-
-#s.sendto(os.read(f,1500),("192.168.1.1",9090))
-
-print "im here"
+    except:
+        tun1.close()
+        tun2.close()
+        exit()
