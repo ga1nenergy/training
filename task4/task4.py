@@ -328,12 +328,12 @@ for i in range(len(as_hex)):
 try:
 	tun0.up()
 
-	packets = 10000
+	packets = 100000
 	print "Packets: " + str(packets)
 
-	start = time.time()
+	start = time.clock()
 
-	for i in range(packets + 1):
+	for i in range(packets):
 
 		packet1 = packet.copy()
 		packet1[IP].src = '192.168.1.2'
@@ -341,13 +341,13 @@ try:
 		packet1[Raw].load = "Hi! I'm UDP-packet"
 		tun0.write(str(packet1))
 
-	finish = time.time()
-	est_time = finish - start
-	print "Scapy time: {0}, packets/msec: {1}".format(est_time, packets/est_time/1000)
+	finish = time.clock()
+	est_time = (finish - start)*1000000
+	print "Scapy time: {0}, mcs: {1}".format(est_time, est_time/packets)
 
-	start = time.time()
+	start = time.clock()
 
-	for i in range(packets + 1):
+	for i in range(packets):
 		packet2 = packet.copy()
 		as_hex = to_hex(packet2)
 		change_src_manual(as_hex, '192.168.1.2')
@@ -357,9 +357,9 @@ try:
 		udp_manual_change_checksum(as_hex, udp_calculate_chksum_hex(as_hex))
 		tun0.write(to_char(as_hex))
 
-	finish = time.time()
-	est_time = finish - start
-	print "Manual time: {0}, packets/msec: {1}".format(est_time, packets/est_time/1000)
+	finish = time.clock()
+	est_time = (finish - start)*1000000
+	print "Manual time: {0}, mcs: {1}".format(est_time, est_time/packets)
 
 finally:
 	tun0.close()
