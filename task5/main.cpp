@@ -48,9 +48,11 @@ int main() {
 	try {
 		iface.up();
 
-		unsigned int start_time = clock();
+		int packets = 100000;
 
-		for (int i = 0; i < 1000; i++) {
+		clock_t start_time = clock();
+
+		for (int i = 0; i < packets; i++) {
 			CustomPacket cp(blank_packet);
 
 			cp.setSrcIP("192.168.1.2");
@@ -65,14 +67,18 @@ int main() {
 			iface.send(data);
 		}
 
-		unsigned int end_time = clock();
+		clock_t end_time = clock();
 
-		cout << endl << "Custom time: " << dec << (end_time - start_time)/1000
-				<< " ms" << endl;
+		cout.precision(5);
+
+		cout << endl << dec << start_time << ' ' << end_time;
+
+		cout << endl << "Custom time: " << (double)(end_time - start_time)/packets/CLOCKS_PER_SEC*1000000
+				<< " mcs" << endl;
 
 		start_time = clock();
 
-		for (int i = 0; i < 1000; i++)
+		for (int i = 0; i < packets; i++)
 		{
 			Packet packet(blank_packet);
 
@@ -87,8 +93,8 @@ int main() {
 
 		end_time = clock();
 
-		cout << endl << "Crafter time: " << dec << (end_time - start_time)/1000
-						<< " ms" << endl;
+		cout << endl << "Crafter time: " << dec << (double)(end_time - start_time)/packets/CLOCKS_PER_SEC*1000000
+						<< " mcs" << endl;
 
 	} catch (exception const &ex) {
 		cerr << ex.what() << endl;
